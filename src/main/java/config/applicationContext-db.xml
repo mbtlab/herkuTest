@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="
+			http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+			http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-2.5.xsd  
+			http://www.springframework.org/schema/aop http://www.springframework.org/schema/aop/spring-aop-2.5.xsd
+			http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.5.xsd">
+	<!-- 数据中心连接池 -->
+	<bean id="dataSource"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${db.driver}"></property>
+		<property name="jdbcUrl" value="${db.url}"></property>
+		<!--<property name="autoCommitOnClose" value="false"></property>-->
+		<property name="user" value="${db.username}"></property>
+		<property name="password" value="${db.password}"></property>
+		<property name="acquireIncrement" value="5"></property>
+		<!-- 当连接池中的连接用完时，C3P0一次性创建新连接的数目 -->
+		<property name="initialPoolSize" value="1"></property>
+		<!-- 初始化时创建的连接数，必须在minPoolSize和maxPoolSize之间 -->
+		<property name="minPoolSize" value="10"></property>
+		<property name="maxPoolSize" value="50"></property>
+		<!-- 最大空闲时间，超过空闲时间的连接将被丢弃
+			[需要注意：mysql默认的连接时长为8小时(28800）【可在my.ini中添加 wait_timeout=30(单位秒)设置连接超时】,这里设置c3p0的超时必须<28800] 
+		-->
+		<property name="maxIdleTime" value="3000"></property>
+		<property name="idleConnectionTestPeriod" value="180"></property>
+		<!-- 每180秒检查连接池中的空闲连接 -->
+		<property name="maxStatements" value="20"></property>
+		<!-- jdbc的标准参数  用以控制数据源内加载的PreparedStatement数量，但由于预缓存的Statement属 于单个Connection而不是整个连接 -->
+	</bean>
+	<bean id="dBConnection" scope="singleton" class="com.datacenter.impl.agent.DBConnectionDaoImpl">
+		<property name="ds" ref="dataSource"></property>
+	</bean>
+	
+	<!-- 日志表连接池 -->		
+	<!-- <bean id="logSource"
+		class="com.mchange.v2.c3p0.ComboPooledDataSource"
+		destroy-method="close">
+		<property name="driverClass" value="${log.driver}"></property>
+		<property name="jdbcUrl" value="${log.url}"></property>
+		<property name="user" value="${log.username}"></property>
+		<property name="password" value="${log.password}"></property>
+		<property name="acquireIncrement" value="5"></property>
+		<property name="initialPoolSize" value="1"></property>
+		<property name="minPoolSize" value="10"></property>
+		<property name="maxPoolSize" value="50"></property>
+		<property name="maxIdleTime" value="3000"></property>
+		<property name="idleConnectionTestPeriod" value="180"></property>
+		<property name="maxStatements" value="20"></property>
+	</bean>	-->
+	<bean id="logConnection" scope="singleton" class="com.datacenter.impl.agent.DBConnectionDaoImpl">
+		<property name="ds" ref="dataSource"></property>
+	</bean>
+	<bean id="logCommand" scope="prototype" class="com.datacenter.impl.agent.LogCommandDaoImpl">
+		<property name="logConn" ref="logConnection"></property>
+	</bean>
+</beans>
